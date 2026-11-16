@@ -1,12 +1,3 @@
-/**
- * @file art_scene.c
- * @brief Composição artística do grupo: gato cinzento sentado numa mesa.
- *
- * Ficheiro novo (não faz parte dos ficheiros fornecidos). Constrói a cena
- * com as funções dos TADs, guarda-a em formato .vsc e gera a imagem .ppm.
- * A cena usa círculos, retângulos, segmentos, polígonos, transparência
- * e várias camadas de profundidade (z_index) - 21 primitivas no total.
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,13 +109,11 @@ int main(void) {
 
   printf("Cena criada com %zu primitivas.\n", vector_scene_get_count(scene));
 
-  // Guardar a cena em texto e gerar a imagem
-  // (substituir XX_YY pelo número do grupo antes da entrega)
-  if (vector_scene_save_text(scene, "art_group_XX_YY.vsc")) {
-    printf("Cena guardada em 'art_group_XX_YY.vsc'\n");
+  if (vector_scene_save_text(scene, "art_group_119844_120300.vsc")) {
+    printf("Cena guardada em 'art_group_119844_120300.vsc'\n");
   }
-  if (vector_scene_render(scene, "art_group_XX_YY.ppm")) {
-    printf("Imagem gerada em 'art_group_XX_YY.ppm'\n");
+  if (vector_scene_render(scene, "art_group_119844_120300.ppm")) {
+    printf("Imagem gerada em 'art_group_119844_120300.ppm'\n");
   }
 
   vector_scene_destroy(scene);

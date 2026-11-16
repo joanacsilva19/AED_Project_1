@@ -7,10 +7,10 @@
  */
 
 /**
- * STUDENT NAME:
- * STUDENT NUMBER:
- * STUDENT NAME:
- * STUDENT NUMBER:
+ * STUDENT NAME: Joana Castro e Silva
+ * STUDENT NUMBER: 119844
+ * STUDENT NAME: Ângelo Manuel Cauchie Figueiredo
+ * STUDENT NUMBER: 120300
  */
 
 #include "primitive.h"
