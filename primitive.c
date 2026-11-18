@@ -198,96 +198,102 @@ Primitive* primitive_create_circle(int id, Point center, double radius,
   return p;
 }
 
-// [ALUNOS] Tolerância (em píxeis) usada no teste de pertença a um segmento:
-// um ponto pertence ao segmento se estiver a esta distância ou menos dele.
-#define SEGMENT_TOLERANCE 2.0
-
-// [ALUNOS] Capacidade inicial do array de vértices de um polígono.
-#define INITIAL_POLYGON_CAPACITY 4
-
 Primitive* primitive_create_rectangle(int id, Point top_left, double width,
                                       double height, Color color, double alpha,
                                       int z_index) {
-  // Verificar as pré-condições (dimensões positivas e alpha em [0,1])
-  if (width <= 0.0 || height <= 0.0 || alpha < 0.0 || alpha > 1.0) {
-    return NULL;
-  }
 
-  // Alocar a estrutura e preencher os campos comuns a todas as primitivas
-  Primitive* p =
-      primitive_allocate_common(id, PRIM_RECTANGLE, color, alpha, z_index);
-  if (p == NULL) {
-    return NULL;
-  }
 
-  // Preencher a geometria específica do retângulo
-  p->geom.rectangle.top_left = top_left;
-  p->geom.rectangle.width = width;
-  p->geom.rectangle.height = height;
-
-  // Calcular a AABB inicial
-  primitive_update_aabb(p);
-
-  return p;
+	// dimensões têm de ser positivas e alpha entre 0 e 1
+	if(height <= 0.0 || width <= 0.0 || alpha < 0.0 || alpha > 1.0){
+		return NULL;
+	}
+	
+	// inicializar a estrutura
+	Primitive* p = primitive_allocate_common(id, PRIM_RECTANGLE, color, alpha, z_index);
+	
+	// ponteiro não nulo
+	if(p == NULL){
+		return NULL;
+	}
+	
+	// guardar componentes do retângulo
+	p->geom.rectangle.top_left = top_left;
+	p->geom.rectangle.height = height;
+	p->geom.rectangle.width = width;
+	
+	// calcular a AABB inicial
+	primitive_update_aabb(p);
+	
+	return p;
 }
 
 Primitive* primitive_create_segment(int id, Point p1, Point p2, Color color,
                                     double alpha, int z_index) {
-  // Verificar a pré-condição (alpha em [0,1])
-  if (alpha < 0.0 || alpha > 1.0) {
-    return NULL;
-  }
 
-  Primitive* p =
-      primitive_allocate_common(id, PRIM_SEGMENT, color, alpha, z_index);
-  if (p == NULL) {
-    return NULL;
-  }
-
-  // Guardar os dois extremos do segmento
-  p->geom.segment.p1 = p1;
-  p->geom.segment.p2 = p2;
-
-  primitive_update_aabb(p);
-
-  return p;
+	// alpha entre 0 e 1
+	if(alpha < 0.0 || alpha > 1.0){
+		return NULL;
+	}
+	
+	// inicializar a estrutura
+	Primitive* p = primitive_allocate_common(id, PRIM_SEGMENT, color, alpha, z_index);
+	
+	// ponteiro não nulo
+	if(p == NULL){
+		return NULL;
+	}
+	
+	// guardar pontas do segmento
+	p->geom.segment.p1 = p1;
+	p->geom.segment.p2 = p2;
+	
+	// calcular a AABB inicial
+	primitive_update_aabb(p);
+	
+	return p;
 }
 
 Primitive* primitive_create_polygon(int id, Color color, double alpha,
                                     int z_index) {
-  if (alpha < 0.0 || alpha > 1.0) {
-    return NULL;
-  }
 
-  Primitive* p =
-      primitive_allocate_common(id, PRIM_POLYGON, color, alpha, z_index);
-  if (p == NULL) {
-    return NULL;
-  }
-
-  // O polígono começa vazio: o array de vértices só é alocado quando se
-  // adiciona o primeiro vértice (ver polygon_add_vertex)
-  p->geom.polygon.vertices = NULL;
-  p->geom.polygon.num_vertices = 0;
-  p->geom.polygon.capacity = 0;
-
-  primitive_update_aabb(p);
-
-  return p;
+	// alpha entre 0 e 1
+	if(alpha < 0.0 || alpha > 1.0){
+		return NULL;
+	}
+	
+	// inicializar a estrutura
+	Primitive* p = primitive_allocate_common(id, PRIM_POLYGON, color, alpha, z_index);
+	
+	// ponteiro não nulo
+	if(p == NULL){
+		return NULL;
+	}
+	
+	// o array de vértices só é alocado quando se adiciona o primeiro vértice
+	p->geom.polygon.vertices = NULL;
+	p->geom.polygon.num_vertices = 0;
+	p->geom.polygon.capacity = 0;
+	
+	// calcular a AABB inicial
+	primitive_update_aabb(p);
+	
+	return p;
 }
 
 void primitive_destroy(Primitive* p) {
-  if (p == NULL) {
-    return;
-  }
-
-  // Só o polígono tem memória dinâmica própria (o array de vértices)
-  if (p->type == PRIM_POLYGON) {
-    free(p->geom.polygon.vertices);
-  }
-
-  // Libertar a estrutura da primitiva
-  free(p);
+	
+	// ponteiro não nulo
+	if(p == NULL){
+		return;
+	}
+	
+	// só o polígono tem memória dinâmica própria (o array de vértices)
+ 	if(p->type == PRIM_POLYGON){
+		free(p->geom.polygon.vertices);
+	}
+	
+	// libertar memória da primitiva
+	free(p);
 }
 
 // ============================================================================
@@ -295,61 +301,65 @@ void primitive_destroy(Primitive* p) {
 // ============================================================================
 
 bool polygon_add_vertex(Primitive* p, Point pt) {
-  if (p == NULL || p->type != PRIM_POLYGON) {
-    return false;
-  }
 
-  PolygonGeom* poly = &p->geom.polygon;
+	// ponteiro não nulo e verificar q é poligono
+	if(p == NULL || p->type != PRIM_POLYGON){
+		return false;
+	}
 
-  // Se o array está cheio, duplicar a capacidade com realloc
-  if (poly->num_vertices == poly->capacity) {
-    size_t new_capacity = INITIAL_POLYGON_CAPACITY;
-    if (poly->capacity > 0) {
-      new_capacity = poly->capacity * 2;
-    }
+	PolygonGeom* poly = &p->geom.polygon;
+	
+	// se o array estiver cheio dobrar a memoria
+	if(poly->num_vertices == poly->capacity){
+		size_t new_capacity = 0;
+		if(poly->capacity > 0){
+			new_capacity = poly->capacity * 2;
+		}
+		
+		// ponteiro temporário; caso realloc falhe o array antigo continua válido
+		Point* new_vertices = realloc(poly->vertices, new_capacity * sizeof(Point));
+		if(new_vertices == NULL){
+			return false;
+		}
+	
+		poly->vertices = new_vertices;
+		poly->capacity = new_capacity;
+	}
 
-    // Usar um ponteiro temporário: se o realloc falhar, o array antigo
-    // continua válido e não se perde memória
-    Point* new_vertices = realloc(poly->vertices, new_capacity * sizeof(Point));
-    if (new_vertices == NULL) {
-      return false;
-    }
-
-    poly->vertices = new_vertices;
-    poly->capacity = new_capacity;
-  }
-
-  // Acrescentar o novo vértice no fim do array
-  poly->vertices[poly->num_vertices] = pt;
-  poly->num_vertices++;
-
-  // A geometria mudou, logo a AABB tem de ser recalculada
-  p->is_aabb_dirty = true;
-
-  return true;
+	// acrescentar o novo vértice no fim do array
+	poly->vertices[poly->num_vertices] = pt;
+	poly->num_vertices++;
+	
+	// refazer AABB
+	p->is_aabb_dirty = true;
+	
+	return true;
 }
 
 bool polygon_remove_vertex(Primitive* p, size_t index) {
-  if (p == NULL || p->type != PRIM_POLYGON) {
-    return false;
-  }
 
-  PolygonGeom* poly = &p->geom.polygon;
-
-  // Índice fora dos limites
-  if (index >= poly->num_vertices) {
-    return false;
-  }
-
-  // Deslocar uma posição para a esquerda os vértices que estão à direita
-  for (size_t i = index; i + 1 < poly->num_vertices; i++) {
-    poly->vertices[i] = poly->vertices[i + 1];
-  }
-  poly->num_vertices--;
-
-  p->is_aabb_dirty = true;
-
-  return true;
+	// ponteiro não nulo e verificar q é poligono
+	if(p == NULL || p->type != PRIM_POLYGON){
+		return false;
+	}
+	
+	PolygonGeom* poly = &p->geom.polygon;
+	
+	// verificar indice
+	if(index >= poly->num_vertices){
+		return false;
+	}
+	
+	// deslocar para a esquerda vértices à direita
+	for(size_t i = index; i + 1 < poly->num_vertices; i++){
+		poly->vertices[i] = poly->vertices[i + 1];
+	}
+	poly->num_vertices--;
+	
+	// refazer AABB
+	p->is_aabb_dirty = true;
+	
+	return true;
 }
 
 // ============================================================================
@@ -361,7 +371,7 @@ void primitive_update_aabb(Primitive* p) {
     return;
   }
 
-  switch (p->type) {
+  switch(p->type){
     case PRIM_CIRCLE:
       p->aabb.min.x = p->geom.circle.center.x - p->geom.circle.radius;
       p->aabb.min.y = p->geom.circle.center.y - p->geom.circle.radius;
@@ -370,7 +380,6 @@ void primitive_update_aabb(Primitive* p) {
       break;
 
     case PRIM_RECTANGLE:
-      // A caixa do retângulo é o próprio retângulo
       p->aabb.min.x = p->geom.rectangle.top_left.x;
       p->aabb.min.y = p->geom.rectangle.top_left.y;
       p->aabb.max.x = p->geom.rectangle.top_left.x + p->geom.rectangle.width;
@@ -378,31 +387,39 @@ void primitive_update_aabb(Primitive* p) {
       break;
 
     case PRIM_SEGMENT:
-      // Mínimo e máximo das coordenadas dos dois extremos
-      p->aabb.min.x = fmin(p->geom.segment.p1.x, p->geom.segment.p2.x);
-      p->aabb.min.y = fmin(p->geom.segment.p1.y, p->geom.segment.p2.y);
-      p->aabb.max.x = fmax(p->geom.segment.p1.x, p->geom.segment.p2.x);
-      p->aabb.max.y = fmax(p->geom.segment.p1.y, p->geom.segment.p2.y);
+
+			// mínimo e máximo das coordenadas dos dois extremos
+			p->aabb.min.x = fmin(p->geom.segment.p1.x, p->geom.segment.p2.x);
+			p->aabb.min.y = fmin(p->geom.segment.p1.y, p->geom.segment.p2.y);
+			p->aabb.max.x = fmax(p->geom.segment.p1.x, p->geom.segment.p2.x);
+			p->aabb.max.y = fmax(p->geom.segment.p1.y, p->geom.segment.p2.y);
+
       break;
 
     case PRIM_POLYGON:
-      if (p->geom.polygon.num_vertices == 0) {
-        // Polígono ainda sem vértices: caixa vazia na origem
-        p->aabb.min = (Point){0.0, 0.0};
-        p->aabb.max = (Point){0.0, 0.0};
-      } else {
-        // Começar com o primeiro vértice e percorrer os restantes,
-        // atualizando os mínimos e máximos encontrados
-        const Point* v = p->geom.polygon.vertices;
-        p->aabb.min = v[0];
-        p->aabb.max = v[0];
-        for (size_t i = 1; i < p->geom.polygon.num_vertices; i++) {
-          if (v[i].x < p->aabb.min.x) p->aabb.min.x = v[i].x;
-          if (v[i].y < p->aabb.min.y) p->aabb.min.y = v[i].y;
-          if (v[i].x > p->aabb.max.x) p->aabb.max.x = v[i].x;
-          if (v[i].y > p->aabb.max.y) p->aabb.max.y = v[i].y;
-        }
-      }
+
+			if(p->geom.polygon.num_vertices == 0){
+				// polígono sem vértices tudo a zeros
+				p->aabb.min = (Point){0.0, 0.0};
+				p->aabb.max = (Point){0.0, 0.0};
+			}
+			else{
+				// atualizar os mins e max percorrendo todos os vertices
+				const Point* v = p->geom.polygon.vertices;
+				p->aabb.min = v[0];
+				p->aabb.max = v[0];
+				for(size_t i = 1; i < p->geom.polygon.num_vertices; i++){
+					if(v[i].x < p->aabb.min.x)
+						p->aabb.min.x = v[i].x;
+					if(v[i].y < p->aabb.min.y)
+						p->aabb.min.y = v[i].y;
+					if(v[i].x > p->aabb.max.x)
+						p->aabb.max.x = v[i].x;
+					if(v[i].y > p->aabb.max.y)
+						p->aabb.max.y = v[i].y;
+				}
+			}
+
       break;
   }
 
@@ -410,38 +427,39 @@ void primitive_update_aabb(Primitive* p) {
 }
 
 void primitive_translate(Primitive* p, double dx, double dy) {
-  if (p == NULL) {
-    return;
-  }
 
-  // Somar o deslocamento (dx, dy) aos pontos que definem cada tipo de forma
-  switch (p->type) {
-    case PRIM_CIRCLE:
-      p->geom.circle.center.x += dx;
-      p->geom.circle.center.y += dy;
-      break;
+	if(p == NULL){
+		return;
+	}
 
-    case PRIM_RECTANGLE:
-      p->geom.rectangle.top_left.x += dx;
-      p->geom.rectangle.top_left.y += dy;
-      break;
-
-    case PRIM_SEGMENT:
-      p->geom.segment.p1.x += dx;
-      p->geom.segment.p1.y += dy;
-      p->geom.segment.p2.x += dx;
-      p->geom.segment.p2.y += dy;
-      break;
-
-    case PRIM_POLYGON:
-      for (size_t i = 0; i < p->geom.polygon.num_vertices; i++) {
-        p->geom.polygon.vertices[i].x += dx;
-        p->geom.polygon.vertices[i].y += dy;
-      }
-      break;
-  }
-
-  p->is_aabb_dirty = true;
+	// somar o dx e dy aos pontos de cada tipo de primitiva
+	switch(p->type){
+		case PRIM_CIRCLE:
+			p->geom.circle.center.x += dx;
+			p->geom.circle.center.y += dy;
+			break;
+		
+		case PRIM_RECTANGLE:
+			p->geom.rectangle.top_left.x += dx;
+			p->geom.rectangle.top_left.y += dy;
+			break;
+		
+		case PRIM_SEGMENT:
+			p->geom.segment.p1.x += dx;
+			p->geom.segment.p1.y += dy;
+			p->geom.segment.p2.x += dx;
+			p->geom.segment.p2.y += dy;
+			break;
+		
+		case PRIM_POLYGON:
+			for (size_t i = 0; i < p->geom.polygon.num_vertices; i++) {
+				p->geom.polygon.vertices[i].x += dx;
+				p->geom.polygon.vertices[i].y += dy;
+			}
+			break;
+	}
+	
+	p->is_aabb_dirty = true;
 }
 
 void primitive_scale(Primitive* p, double factor) {
@@ -449,47 +467,46 @@ void primitive_scale(Primitive* p, double factor) {
     return;
   }
 
-  switch (p->type) {
-    case PRIM_CIRCLE:
-      // O centro mantém-se, só o raio muda
-      p->geom.circle.radius *= factor;
-      break;
-
-    case PRIM_RECTANGLE:
-      // O canto superior esquerdo mantém-se, mudam as dimensões
-      p->geom.rectangle.width *= factor;
-      p->geom.rectangle.height *= factor;
-      break;
-
-    case PRIM_SEGMENT: {
-      // Escalar os dois extremos em relação ao ponto médio do segmento:
-      // novo = meio + (antigo - meio) * factor
-      Point* p1 = &p->geom.segment.p1;
-      Point* p2 = &p->geom.segment.p2;
-      double mid_x = (p1->x + p2->x) / 2.0;
-      double mid_y = (p1->y + p2->y) / 2.0;
-      p1->x = mid_x + (p1->x - mid_x) * factor;
-      p1->y = mid_y + (p1->y - mid_y) * factor;
-      p2->x = mid_x + (p2->x - mid_x) * factor;
-      p2->y = mid_y + (p2->y - mid_y) * factor;
-      break;
-    }
-
-    case PRIM_POLYGON: {
-      // Escalar cada vértice em relação ao centro da AABB do polígono
-      primitive_update_aabb(p);  // garantir que a AABB está atualizada
-      double center_x = (p->aabb.min.x + p->aabb.max.x) / 2.0;
-      double center_y = (p->aabb.min.y + p->aabb.max.y) / 2.0;
-      for (size_t i = 0; i < p->geom.polygon.num_vertices; i++) {
-        Point* v = &p->geom.polygon.vertices[i];
-        v->x = center_x + (v->x - center_x) * factor;
-        v->y = center_y + (v->y - center_y) * factor;
-      }
-      break;
-    }
-  }
-
-  p->is_aabb_dirty = true;
+	switch(p->type){
+		case PRIM_CIRCLE:
+			// centro igual, muda raio
+			p->geom.circle.radius *= factor;
+			break;
+		
+		case PRIM_RECTANGLE:
+			// topleft igual, muda dimensões
+			p->geom.rectangle.width *= factor;
+			p->geom.rectangle.height *= factor;
+			break;
+		
+		case PRIM_SEGMENT: {
+			// scale nas pontas, ponto médio do segmento igual
+			Point* p1 = &p->geom.segment.p1;
+			Point* p2 = &p->geom.segment.p2;
+			double mid_x = (p1->x + p2->x) / 2.0;
+			double mid_y = (p1->y + p2->y) / 2.0;
+			p1->x = mid_x + (p1->x - mid_x) * factor;
+			p1->y = mid_y + (p1->y - mid_y) * factor;
+			p2->x = mid_x + (p2->x - mid_x) * factor;
+			p2->y = mid_y + (p2->y - mid_y) * factor;
+			break;
+		}
+		
+		case PRIM_POLYGON: {
+			// scale cada vértice, centro da AABB do poligono igual
+			primitive_update_aabb(p);  // garantir AABB atualizada
+			double center_x = (p->aabb.min.x + p->aabb.max.x) / 2.0;
+			double center_y = (p->aabb.min.y + p->aabb.max.y) / 2.0;
+			for (size_t i = 0; i < p->geom.polygon.num_vertices; i++) {
+				Point* v = &p->geom.polygon.vertices[i];
+				v->x = center_x + (v->x - center_x) * factor;
+				v->y = center_y + (v->y - center_y) * factor;
+			}
+			break;
+		}
+	}
+	
+	p->is_aabb_dirty = true;
 }
 
 bool primitive_contains_point(const Primitive* p, Point pt) {
@@ -498,25 +515,20 @@ bool primitive_contains_point(const Primitive* p, Point pt) {
   }
 
   // Narrow-phase exact geometric test dispatch
-  // (usa as funções matemáticas auxiliares fornecidas no início do ficheiro)
+  // usa funções matemáticas auxiliares fornecidas no início do ficheiro
   switch (p->type) {
     case PRIM_CIRCLE:
       return math_circle_contains_point(p->geom.circle.center,
                                         p->geom.circle.radius, pt);
 
     case PRIM_RECTANGLE:
-      return math_rect_contains_point(p->geom.rectangle.top_left,
-                                      p->geom.rectangle.width,
-                                      p->geom.rectangle.height, pt);
-
+			return math_rect_contains_point(p->geom.rectangle.top_left, p->geom.rectangle.width, p->geom.rectangle.height, pt);
+			
     case PRIM_SEGMENT:
-      return math_segment_contains_point(p->geom.segment.p1,
-                                         p->geom.segment.p2,
-                                         SEGMENT_TOLERANCE, pt);
-
+			return math_segment_contains_point(p->geom.segment.p1, p->geom.segment.p2, 2.0, pt);	// 2.0 de tolerância
+			
     case PRIM_POLYGON:
-      return math_polygon_contains_point(p->geom.polygon.vertices,
-                                         p->geom.polygon.num_vertices, pt);
+			return math_polygon_contains_point(p->geom.polygon.vertices, p->geom.polygon.num_vertices, pt);
   }
 
   return false;
