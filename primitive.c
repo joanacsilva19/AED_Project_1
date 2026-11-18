@@ -311,7 +311,7 @@ bool polygon_add_vertex(Primitive* p, Point pt) {
 	
 	// se o array estiver cheio dobrar a memoria
 	if(poly->num_vertices == poly->capacity){
-		size_t new_capacity = 0;
+		size_t new_capacity = 4;	// min 4 vertices
 		if(poly->capacity > 0){
 			new_capacity = poly->capacity * 2;
 		}
