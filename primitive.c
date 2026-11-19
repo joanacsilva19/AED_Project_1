@@ -389,10 +389,12 @@ void primitive_update_aabb(Primitive* p) {
     case PRIM_SEGMENT:
 
 			// mínimo e máximo das coordenadas dos dois extremos
-			p->aabb.min.x = fmin(p->geom.segment.p1.x, p->geom.segment.p2.x);
-			p->aabb.min.y = fmin(p->geom.segment.p1.y, p->geom.segment.p2.y);
-			p->aabb.max.x = fmax(p->geom.segment.p1.x, p->geom.segment.p2.x);
-			p->aabb.max.y = fmax(p->geom.segment.p1.y, p->geom.segment.p2.y);
+			// alargado 2.0 para cada lado (a tolerância do contains_point),
+			// senão o picking otimizado falha pontos perto do segmento
+			p->aabb.min.x = fmin(p->geom.segment.p1.x, p->geom.segment.p2.x) - 2.0;
+			p->aabb.min.y = fmin(p->geom.segment.p1.y, p->geom.segment.p2.y) - 2.0;
+			p->aabb.max.x = fmax(p->geom.segment.p1.x, p->geom.segment.p2.x) + 2.0;
+			p->aabb.max.y = fmax(p->geom.segment.p1.y, p->geom.segment.p2.y) + 2.0;
 
       break;
 
