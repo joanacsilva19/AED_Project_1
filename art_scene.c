@@ -78,11 +78,11 @@ int main(void){
 	printf("Cena criada com %zu primitivas.\n", vector_scene_get_count(scene));
 
 	// guardar .vsc e gerar .ppm
-	if(vector_scene_save_text(scene, "art_group_119844_120300.vsc")){
-		printf("Cena guardada em 'art_group_119844_120300.vsc'\n");
+	if(vector_scene_save_text(scene, "art_P3J_119844_120300.vsc")){
+		printf("Cena guardada em 'art_P3J_119844_120300.vsc'\n");
 	}
-	if(vector_scene_render(scene, "art_group_119844_120300.ppm")){
-		printf("Imagem gerada em 'art_group_119844_120300.ppm'\n");
+	if(vector_scene_render(scene, "art_P3J_119844_120300.ppm")){
+		printf("Imagem gerada em 'art_P3J_119844_120300.ppm'\n");
 	}
 
 	vector_scene_destroy(scene);
